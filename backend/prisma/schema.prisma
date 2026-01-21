@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS
+// ============================================
+
+model User {
+  id           String    @id @default(uuid())
+  email        String?   @unique
+  passwordHash String?
+  telegramId   String?   @unique
+  name         String
+  avatarUrl    String?
+  role         Role      @default(EXECUTOR)
+  createdAt    DateTime  @default(now())
+  lastActiveAt DateTime  @default(now())
+
+  executorProfile     ExecutorProfile?
+  customerProfile     CustomerProfile?
+  ordersCreated       Order[]
+  swipes              Swipe[]
+  responses           Response[]
+  contractsAsCustomer Contract[]       @relation("CustomerContracts")
+  contractsAsExecutor Contract[]       @relation("ExecutorContracts")
+  messages            Message[]
+
+  @@map("users")
+}
+
+model ExecutorProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio             String?
+  hourlyRateMin   Int?
+  hourlyRateMax   Int?
+  skills          String[]
+  portfolioUrl    String?
+  experienceYears Int?
+  rating          Float    @default(0)
+  completedCount  Int      @default(0)
+
+  @@map("executor_profiles")
+}
+
+model CustomerProfile {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String?
+  bio         String?
+
+  @@map("customer_profiles")
+}
+
+// ============================================
+// ORDERS
+// ============================================
+
+model Order {
+  id             String      @id @default(uuid())
+  customerId     String
+  customer       User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  budgetMin      Int?
+  budgetMax      Int?
+  deadline       DateTime?
+  skillsRequired String[]
+  category       Category
+  status         OrderStatus @default(ACTIVE)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  swipes    Swipe[]
+  responses Response[]
+  contracts Contract[]
+
+  @@map("orders")
+}
+
+// ============================================
+// SWIPES & RESPONSES
+// ============================================
+
+model Swipe {
+  id         String      @id @default(uuid())
+  executorId String
+  executor   User        @relation(fields: [executorId], references: [id], onDelete: Cascade)
+  orderId    String
+  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  action     SwipeAction
+  createdAt  DateTime    @default(now())
+
+  @@unique([executorId, orderId])
+  @@map("swipes")
+}
+
+model Response {
+  id               String         @id @default(uuid())
+  orderId          String
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  executorId       String
+  executor         User           @relation(fields: [executorId], references: [id], onDelete: Cascade)
+  coverLetter      String?
+  proposedBudget   Int?
+  proposedDeadline DateTime?
+  status           ResponseStatus @default(PENDING)
+  createdAt        DateTime       @default(now())
+
+  @@unique([orderId, executorId])
+  @@map("responses")
+}
+
+// ============================================
+// CONTRACTS
+// ============================================
+
+model Contract {
+  id          String         @id @default(uuid())
+  orderId     String
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    User           @relation("CustomerContracts", fields: [customerId], references: [id], onDelete: Cascade)
+  executorId  String
+  executor    User           @relation("ExecutorContracts", fields: [executorId], references: [id], onDelete: Cascade)
+  amount      Int
+  platformFee Int
+  status      ContractStatus @default(PENDING)
+  fundedAt    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+
+  chat Chat?
+
+  @@map("contracts")
+}
+
+// ============================================
+// CHAT
+// ============================================
+
+model Chat {
+  id         String   @id @default(uuid())
+  contractId String   @unique
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  messages Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id        String      @id @default(uuid())
+  chatId    String
+  chat      Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content   String?
+  type      MessageType @default(TEXT)
+  fileUrl   String?
+  fileName  String?
+  createdAt DateTime    @default(now())
+  readAt    DateTime?
+
+  @@map("messages")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  CUSTOMER
+  EXECUTOR
+  BOTH
+}
+
+enum Category {
+  DEVELOPMENT
+  DESIGN
+  MARKETING
+  COPYWRITING
+  OTHER
+}
+
+enum OrderStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SwipeAction {
+  LIKE
+  SKIP
+}
+
+enum ResponseStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ContractStatus {
+  PENDING
+  FUNDED
+  IN_PROGRESS
+  COMPLETED
+  DISPUTED
+  CANCELLED
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  IMAGE
+  SYSTEM
+}

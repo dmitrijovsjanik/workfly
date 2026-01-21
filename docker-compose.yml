@@ -1,0 +1,76 @@
+services:
+  # Frontend - React (exposed on port 3001)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3001:80"
+    restart: unless-stopped
+    networks:
+      - workfly-network
+
+  # Backend - Node.js API (exposed on port 3002)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+      - NODE_ENV=${NODE_ENV}
+      - APP_URL=${APP_URL}
+      - PORT=3000
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - workfly-network
+
+  # PostgreSQL
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=workfly
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=workfly
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workfly"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - workfly-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    networks:
+      - workfly-network
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
+
+networks:
+  workfly-network:
+    driver: bridge

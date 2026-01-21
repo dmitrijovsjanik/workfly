@@ -1,0 +1,66 @@
+services:
+  # Backend - Node.js API (development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      - DATABASE_URL=postgresql://workfly:devpassword@db:5432/workfly
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev_jwt_secret_min_32_characters_long
+      - JWT_EXPIRES_IN=7d
+      - NODE_ENV=development
+      - APP_URL=http://localhost:5173
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - workfly-network
+
+  # PostgreSQL
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=workfly
+      - POSTGRES_PASSWORD=devpassword
+      - POSTGRES_DB=workfly
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workfly"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workfly-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - workfly-network
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
+
+networks:
+  workfly-network:
+    driver: bridge
