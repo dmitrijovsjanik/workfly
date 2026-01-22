@@ -1,5 +1,5 @@
-import { forwardRef, useState } from 'react';
-import { motion, PanInfo } from 'framer-motion';
+import { forwardRef, useState, useEffect } from 'react';
+import { motion, PanInfo, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Typography } from '@alfalab/core-components-typography';
 import { Tag } from '@alfalab/core-components-tag';
 import { cardStyles } from '@/components';
@@ -30,37 +30,78 @@ interface SwipeCardProps {
   onAnimationComplete?: () => void;
 }
 
-const SWIPE_THRESHOLD = 100;
+// Swipe thresholds
+const SWIPE_OFFSET_THRESHOLD = 80; // Minimum distance to trigger swipe
+const SWIPE_VELOCITY_THRESHOLD = 300; // Minimum velocity to trigger swipe regardless of distance
 
 export const SwipeCard = forwardRef<HTMLDivElement, SwipeCardProps>(function SwipeCard(
   { order, onSwipe, userSkills = [], isTop = false, exitDirection = null, onAnimationComplete },
   ref
 ) {
-  // Track drag position for rotation/opacity effects during drag
-  const [dragX, setDragX] = useState(0);
+  // Track if card is being removed (finger swipe or button)
+  const [isExiting, setIsExiting] = useState(false);
 
-  const handleDrag = (_: unknown, info: PanInfo) => {
-    if (exitDirection) return;
-    setDragX(info.offset.x);
-  };
+  // Motion values for drag tracking
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-300, 0, 300], [-25, 0, 25]);
+  const opacity = useTransform(x, [-300, -150, 0, 150, 300], [0.5, 0.8, 1, 0.8, 0.5]);
+
+  // Handle button press - animate exit via motion values
+  useEffect(() => {
+    if (exitDirection && !isExiting) {
+      setIsExiting(true);
+      const targetX = exitDirection === 'right' ? 500 : -500;
+      animate(x, targetX, {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        onComplete: () => {
+          onAnimationComplete?.();
+        },
+      });
+    }
+  }, [exitDirection, isExiting, x, onAnimationComplete]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (exitDirection) return;
-    if (info.offset.x > SWIPE_THRESHOLD) {
-      onSwipe('right');
-    } else if (info.offset.x < -SWIPE_THRESHOLD) {
-      onSwipe('left');
+    if (isExiting) return;
+
+    const { offset, velocity } = info;
+
+    // Check if swipe should be triggered based on distance OR velocity
+    const swipedRight = offset.x > SWIPE_OFFSET_THRESHOLD || velocity.x > SWIPE_VELOCITY_THRESHOLD;
+    const swipedLeft = offset.x < -SWIPE_OFFSET_THRESHOLD || velocity.x < -SWIPE_VELOCITY_THRESHOLD;
+
+    if (swipedRight) {
+      setIsExiting(true);
+      animate(x, 500, {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        velocity: velocity.x,
+        onComplete: () => {
+          onSwipe('right');
+        },
+      });
+    } else if (swipedLeft) {
+      setIsExiting(true);
+      animate(x, -500, {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+        velocity: velocity.x,
+        onComplete: () => {
+          onSwipe('left');
+        },
+      });
     } else {
-      setDragX(0); // Reset if not swiped
+      // Return to center
+      animate(x, 0, {
+        type: 'spring',
+        stiffness: 500,
+        damping: 35,
+      });
     }
   };
-
-  // When exitDirection changes (button press), trigger exit animation
-  const targetX = exitDirection === 'right' ? 400 : exitDirection === 'left' ? -400 : dragX;
-
-  // Calculate rotation and opacity based on position
-  const rotation = isTop ? (targetX / 200) * 15 : 0;
-  const opacity = isTop && exitDirection ? Math.max(0, 1 - Math.abs(targetX) / 400) : isTop ? Math.max(0.5, 1 - Math.abs(dragX) / 400) : 1;
 
   return (
     <motion.div
@@ -68,34 +109,26 @@ export const SwipeCard = forwardRef<HTMLDivElement, SwipeCardProps>(function Swi
       className={`${cardStyles.card} ${styles.swipeCard}`}
       style={{
         zIndex: isTop ? 2 : 1,
+        x,
+        rotate,
+        opacity,
+        pointerEvents: isExiting ? 'none' : 'auto',
       }}
-      drag={isTop && !exitDirection ? 'x' : false}
-      dragConstraints={{ left: -400, right: 400 }}
-      dragElastic={0.9}
-      onDrag={handleDrag}
+      drag={isTop && !isExiting ? 'x' : false}
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={1}
       onDragEnd={handleDragEnd}
       initial={{ scale: 0.95, y: 10 }}
       animate={{
         scale: isTop ? 1 : 0.95,
         y: isTop ? 0 : 10,
-        x: exitDirection ? targetX : 0,
-        rotate: rotation,
-        opacity: opacity,
       }}
       exit={{
-        x: targetX || (exitDirection === 'right' ? 400 : -400),
+        x: x.get() > 0 ? 500 : -500,
         opacity: 0,
-        transition: { duration: 0.3, ease: 'easeOut' },
+        transition: { duration: 0.2 },
       }}
-      transition={exitDirection
-        ? { duration: 0.25, ease: 'easeOut' }
-        : { type: 'spring', stiffness: 300, damping: 30 }
-      }
-      onAnimationComplete={() => {
-        if (exitDirection && onAnimationComplete) {
-          onAnimationComplete();
-        }
-      }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
       {/* Card Content */}
       <div className={cardStyles.content}>
