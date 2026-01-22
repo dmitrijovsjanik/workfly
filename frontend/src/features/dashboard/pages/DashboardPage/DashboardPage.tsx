@@ -33,6 +33,7 @@ export function DashboardPage() {
   const [swipedOrders, setSwipedOrders] = useState<Set<string>>(new Set());
   const [swipedExecutors, setSwipedExecutors] = useState<Set<string>>(new Set());
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
+  const [pendingSwipe, setPendingSwipe] = useState<{ type: 'order' | 'executor'; id: string; direction: 'left' | 'right' } | null>(null);
 
   const isLoading = profileLoading || ordersCountLoading;
 
@@ -53,6 +54,7 @@ export function DashboardPage() {
   const currentExecutor = availableExecutors[0];
   const nextExecutor = availableExecutors[1];
 
+  // Handle finger swipe - remove card immediately (exit animation plays via AnimatePresence)
   const handleOrderSwipe = useCallback((order: Order, direction: 'left' | 'right') => {
     setExitDirection(direction);
     setSwipedOrders((prev) => new Set(prev).add(order.id));
@@ -69,22 +71,43 @@ export function DashboardPage() {
     }
   }, []);
 
+  // Handle button press - animate first, then remove card
   const handleButtonSwipe = useCallback((direction: 'left' | 'right') => {
+    if (pendingSwipe) return; // Already animating
+
     if (mode === 'orders' && currentOrder) {
-      handleOrderSwipe(currentOrder, direction);
+      setPendingSwipe({ type: 'order', id: currentOrder.id, direction });
+      setExitDirection(direction);
     } else if (mode === 'executors' && currentExecutor) {
-      handleExecutorSwipe(currentExecutor, direction);
+      setPendingSwipe({ type: 'executor', id: currentExecutor.id, direction });
+      setExitDirection(direction);
     }
-  }, [mode, currentOrder, currentExecutor, handleOrderSwipe, handleExecutorSwipe]);
+  }, [mode, currentOrder, currentExecutor, pendingSwipe]);
+
+  // Called when button-triggered animation completes
+  const handleAnimationComplete = useCallback(() => {
+    if (!pendingSwipe) return;
+
+    if (pendingSwipe.type === 'order') {
+      setSwipedOrders((prev) => new Set(prev).add(pendingSwipe.id));
+      if (pendingSwipe.direction === 'right') {
+        console.log('LIKE order:', pendingSwipe.id);
+      }
+    } else {
+      setSwipedExecutors((prev) => new Set(prev).add(pendingSwipe.id));
+      if (pendingSwipe.direction === 'right') {
+        console.log('LIKE executor:', pendingSwipe.id);
+      }
+    }
+
+    setPendingSwipe(null);
+    setExitDirection(null);
+  }, [pendingSwipe]);
 
   // Check if we have cards to show actions for the current mode
   const hasCards = mode === 'orders'
     ? canSwipeOrders && availableOrders.length > 0
     : canSwipeExecutors && availableExecutors.length > 0;
-
-  // Check if we have any cards in either stack
-  const hasOrderCards = canSwipeOrders && availableOrders.length > 0;
-  const hasExecutorCards = canSwipeExecutors && availableExecutors.length > 0;
 
   // Set subheader (tabs)
   useEffect(() => {
@@ -213,7 +236,8 @@ export function DashboardPage() {
               userSkills={userSkills}
               onSwipe={(direction) => handleOrderSwipe(currentOrder, direction)}
               isTop={isActive}
-              exitDirection={exitDirection}
+              exitDirection={pendingSwipe?.type === 'order' && pendingSwipe.id === currentOrder.id ? exitDirection : null}
+              onAnimationComplete={handleAnimationComplete}
             />
           )}
         </AnimatePresence>
@@ -277,7 +301,8 @@ export function DashboardPage() {
               executor={currentExecutor}
               onSwipe={(direction) => handleExecutorSwipe(currentExecutor, direction)}
               isTop={isActive}
-              exitDirection={exitDirection}
+              exitDirection={pendingSwipe?.type === 'executor' && pendingSwipe.id === currentExecutor.id ? exitDirection : null}
+              onAnimationComplete={handleAnimationComplete}
             />
           )}
         </AnimatePresence>

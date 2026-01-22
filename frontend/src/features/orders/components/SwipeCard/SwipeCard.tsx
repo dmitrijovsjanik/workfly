@@ -27,37 +27,43 @@ interface SwipeCardProps {
   userSkills?: string[];
   isTop?: boolean;
   exitDirection?: 'left' | 'right' | null;
+  onAnimationComplete?: () => void;
 }
 
 const SWIPE_THRESHOLD = 100;
 
 export const SwipeCard = forwardRef<HTMLDivElement, SwipeCardProps>(function SwipeCard(
-  { order, onSwipe, userSkills = [], isTop = false, exitDirection = null },
+  { order, onSwipe, userSkills = [], isTop = false, exitDirection = null, onAnimationComplete },
   ref
 ) {
   // Track drag position for rotation/opacity effects during drag
   const [dragX, setDragX] = useState(0);
+  const [isExiting, setIsExiting] = useState(false);
 
   const handleDrag = (_: unknown, info: PanInfo) => {
+    if (isExiting) return;
     setDragX(info.offset.x);
   };
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
+    if (isExiting) return;
     if (info.offset.x > SWIPE_THRESHOLD) {
+      setIsExiting(true);
       onSwipe('right');
     } else if (info.offset.x < -SWIPE_THRESHOLD) {
+      setIsExiting(true);
       onSwipe('left');
     } else {
       setDragX(0); // Reset if not swiped
     }
   };
 
-  // Calculate rotation and opacity based on drag
-  const rotation = isTop ? (dragX / 200) * 15 : 0;
-  const dragOpacity = isTop ? Math.max(0.5, 1 - Math.abs(dragX) / 400) : 1;
+  // When exitDirection changes (button press), trigger exit animation
+  const targetX = exitDirection === 'right' ? 400 : exitDirection === 'left' ? -400 : dragX;
 
-  // Exit position
-  const exitX = exitDirection === 'right' ? 400 : exitDirection === 'left' ? -400 : 0;
+  // Calculate rotation and opacity based on position
+  const rotation = isTop ? (targetX / 200) * 15 : 0;
+  const opacity = isTop && exitDirection ? Math.max(0, 1 - Math.abs(targetX) / 400) : isTop ? Math.max(0.5, 1 - Math.abs(dragX) / 400) : 1;
 
   return (
     <motion.div
@@ -65,10 +71,8 @@ export const SwipeCard = forwardRef<HTMLDivElement, SwipeCardProps>(function Swi
       className={`${cardStyles.card} ${styles.swipeCard}`}
       style={{
         zIndex: isTop ? 2 : 1,
-        rotate: rotation,
-        opacity: dragOpacity,
       }}
-      drag={isTop ? 'x' : false}
+      drag={isTop && !exitDirection ? 'x' : false}
       dragConstraints={{ left: -400, right: 400 }}
       dragElastic={0.9}
       onDrag={handleDrag}
@@ -77,14 +81,21 @@ export const SwipeCard = forwardRef<HTMLDivElement, SwipeCardProps>(function Swi
       animate={{
         scale: isTop ? 1 : 0.95,
         y: isTop ? 0 : 10,
-        x: 0,
+        x: exitDirection ? targetX : 0,
+        rotate: rotation,
+        opacity: opacity,
       }}
       exit={{
-        x: exitX,
+        x: targetX || (exitDirection === 'right' ? 400 : -400),
         opacity: 0,
         transition: { duration: 0.3, ease: 'easeOut' },
       }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      onAnimationComplete={() => {
+        if (exitDirection && onAnimationComplete) {
+          onAnimationComplete();
+        }
+      }}
       layout
     >
       {/* Card Content */}
