@@ -34,7 +34,6 @@ export const NeedCard = forwardRef<HTMLDivElement, NeedCardProps>(function NeedC
         transition: { duration: 0.2 },
       }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      layout
     >
       <div className={`${cardStyles.content} ${styles.content}`}>
         <div className={styles.icon}>{icon}</div>

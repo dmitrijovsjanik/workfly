@@ -77,13 +77,15 @@ export const ExecutorCard = forwardRef<HTMLDivElement, ExecutorCardProps>(functi
         opacity: 0,
         transition: { duration: 0.3, ease: 'easeOut' },
       }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      onAnimationComplete={() => {
-        if (exitDirection && onAnimationComplete) {
+      transition={exitDirection
+        ? { duration: 0.25, ease: 'easeOut' }
+        : { type: 'spring', stiffness: 300, damping: 30 }
+      }
+      onAnimationComplete={(definition) => {
+        if (exitDirection && onAnimationComplete && definition === 'animate') {
           onAnimationComplete();
         }
       }}
-      layout
     >
       {/* Card Content */}
       <div className={cardStyles.content}>
