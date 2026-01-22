@@ -38,20 +38,17 @@ export const SwipeCard = forwardRef<HTMLDivElement, SwipeCardProps>(function Swi
 ) {
   // Track drag position for rotation/opacity effects during drag
   const [dragX, setDragX] = useState(0);
-  const [isExiting, setIsExiting] = useState(false);
 
   const handleDrag = (_: unknown, info: PanInfo) => {
-    if (isExiting) return;
+    if (exitDirection) return;
     setDragX(info.offset.x);
   };
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (isExiting) return;
+    if (exitDirection) return;
     if (info.offset.x > SWIPE_THRESHOLD) {
-      setIsExiting(true);
       onSwipe('right');
     } else if (info.offset.x < -SWIPE_THRESHOLD) {
-      setIsExiting(true);
       onSwipe('left');
     } else {
       setDragX(0); // Reset if not swiped
@@ -94,8 +91,8 @@ export const SwipeCard = forwardRef<HTMLDivElement, SwipeCardProps>(function Swi
         ? { duration: 0.25, ease: 'easeOut' }
         : { type: 'spring', stiffness: 300, damping: 30 }
       }
-      onAnimationComplete={(definition) => {
-        if (exitDirection && onAnimationComplete && definition === 'animate') {
+      onAnimationComplete={() => {
+        if (exitDirection && onAnimationComplete) {
           onAnimationComplete();
         }
       }}
