@@ -25,10 +25,12 @@
   gap: 16px;
 }
 
-/* Body section - 3:4 aspect ratio */
+/* Body section - 3:4 aspect ratio, shrinks if doesn't fit */
 .main {
   width: 100%;
   aspect-ratio: 3 / 4;
+  min-height: 0;
+  flex-shrink: 1;
   padding: 8px 16px;
 }
 
