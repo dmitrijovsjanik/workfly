@@ -113,9 +113,9 @@ export const ExecutorCard = forwardRef<HTMLDivElement, ExecutorCardProps>(functi
       exit={{
         x: x.get() > 0 ? 500 : -500,
         opacity: 0,
-        transition: { duration: 0.2 },
+        transition: { duration: 0.15 },
       }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+      transition={{ type: 'spring', stiffness: 800, damping: 35 }}
     >
       {/* Card Content */}
       <div className={cardStyles.content}>
