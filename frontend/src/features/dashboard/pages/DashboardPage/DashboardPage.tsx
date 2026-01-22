@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Message01Icon, Cancel01Icon, FavouriteIcon } from '@hugeicons/core-free-icons';
 import { Skeleton } from '@alfalab/core-components-skeleton';
@@ -45,8 +45,8 @@ export function DashboardPage() {
   }, [setSearchParams]);
   const [swipedOrders, setSwipedOrders] = useState<Set<string>>(new Set());
   const [swipedExecutors, setSwipedExecutors] = useState<Set<string>>(new Set());
-  const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
-  const [pendingSwipe, setPendingSwipe] = useState<{ type: 'order' | 'executor'; id: string; direction: 'left' | 'right' } | null>(null);
+  const [orderExitDirection, setOrderExitDirection] = useState<'left' | 'right' | null>(null);
+  const [executorExitDirection, setExecutorExitDirection] = useState<'left' | 'right' | null>(null);
 
   const isLoading = profileLoading || ordersCountLoading;
 
@@ -67,55 +67,31 @@ export function DashboardPage() {
   const currentExecutor = availableExecutors[0];
   const nextExecutor = availableExecutors[1];
 
-  // Handle finger swipe - remove card immediately (exit animation plays via AnimatePresence)
-  const handleOrderSwipe = useCallback((order: Order, direction: 'left' | 'right') => {
-    setExitDirection(direction);
+  // Called when swipe animation completes (both finger and button)
+  const handleOrderSwipeComplete = useCallback((order: Order, direction: 'left' | 'right') => {
     setSwipedOrders((prev) => new Set(prev).add(order.id));
+    setOrderExitDirection(null);
     if (direction === 'right') {
-      console.log('LIKE order:', order.id);
+      // TODO: Send like to API
     }
   }, []);
 
-  const handleExecutorSwipe = useCallback((executor: Executor, direction: 'left' | 'right') => {
-    setExitDirection(direction);
+  const handleExecutorSwipeComplete = useCallback((executor: Executor, direction: 'left' | 'right') => {
     setSwipedExecutors((prev) => new Set(prev).add(executor.id));
+    setExecutorExitDirection(null);
     if (direction === 'right') {
-      console.log('LIKE executor:', executor.id);
+      // TODO: Send like to API
     }
   }, []);
 
-  // Handle button press - animate first, then remove card
+  // Handle button press - just set exit direction, card will call onSwipeComplete when done
   const handleButtonSwipe = useCallback((direction: 'left' | 'right') => {
-    if (pendingSwipe) return; // Already animating
-
-    if (mode === 'projects' && currentOrder) {
-      setPendingSwipe({ type: 'order', id: currentOrder.id, direction });
-      setExitDirection(direction);
-    } else if (mode === 'executors' && currentExecutor) {
-      setPendingSwipe({ type: 'executor', id: currentExecutor.id, direction });
-      setExitDirection(direction);
+    if (mode === 'projects' && currentOrder && !orderExitDirection) {
+      setOrderExitDirection(direction);
+    } else if (mode === 'executors' && currentExecutor && !executorExitDirection) {
+      setExecutorExitDirection(direction);
     }
-  }, [mode, currentOrder, currentExecutor, pendingSwipe]);
-
-  // Called when button-triggered animation completes
-  const handleAnimationComplete = useCallback(() => {
-    if (!pendingSwipe) return;
-
-    if (pendingSwipe.type === 'order') {
-      setSwipedOrders((prev) => new Set(prev).add(pendingSwipe.id));
-      if (pendingSwipe.direction === 'right') {
-        console.log('LIKE order:', pendingSwipe.id);
-      }
-    } else {
-      setSwipedExecutors((prev) => new Set(prev).add(pendingSwipe.id));
-      if (pendingSwipe.direction === 'right') {
-        console.log('LIKE executor:', pendingSwipe.id);
-      }
-    }
-
-    setPendingSwipe(null);
-    setExitDirection(null);
-  }, [pendingSwipe]);
+  }, [mode, currentOrder, currentExecutor, orderExitDirection, executorExitDirection]);
 
   // Check if we have cards to show actions for the current mode
   const hasCards = mode === 'projects'
@@ -226,36 +202,33 @@ export function DashboardPage() {
 
     return (
       <div className={styles.cardStack}>
-        <AnimatePresence mode="popLayout" onExitComplete={() => setExitDirection(null)}>
-          {/* NeedCard всегда в самом низу колоды */}
-          <NeedCard
-            key="projects-need-card"
-            icon="🎉"
-            title="Проекты закончились"
-            text="Вы просмотрели все доступные проекты. Загляните позже!"
-            isTop={isNeedCardTop}
+        {/* NeedCard всегда в самом низу колоды */}
+        <NeedCard
+          key="projects-need-card"
+          icon="🎉"
+          title="Проекты закончились"
+          text="Вы просмотрели все доступные проекты. Загляните позже!"
+          isTop={isNeedCardTop}
+        />
+        {nextOrder && (
+          <SwipeCard
+            key={nextOrder.id}
+            order={nextOrder}
+            userSkills={userSkills}
+            onSwipeComplete={() => {}}
+            isTop={false}
           />
-          {nextOrder && (
-            <SwipeCard
-              key={nextOrder.id}
-              order={nextOrder}
-              userSkills={userSkills}
-              onSwipe={() => {}}
-              isTop={false}
-            />
-          )}
-          {currentOrder && (
-            <SwipeCard
-              key={currentOrder.id}
-              order={currentOrder}
-              userSkills={userSkills}
-              onSwipe={(direction) => handleOrderSwipe(currentOrder, direction)}
-              isTop={isActive}
-              exitDirection={pendingSwipe?.type === 'order' && pendingSwipe.id === currentOrder.id ? exitDirection : null}
-              onAnimationComplete={handleAnimationComplete}
-            />
-          )}
-        </AnimatePresence>
+        )}
+        {currentOrder && (
+          <SwipeCard
+            key={currentOrder.id}
+            order={currentOrder}
+            userSkills={userSkills}
+            onSwipeComplete={(direction) => handleOrderSwipeComplete(currentOrder, direction)}
+            isTop={isActive}
+            exitDirection={orderExitDirection}
+          />
+        )}
       </div>
     );
   };
@@ -293,34 +266,31 @@ export function DashboardPage() {
 
     return (
       <div className={styles.cardStack}>
-        <AnimatePresence mode="popLayout" onExitComplete={() => setExitDirection(null)}>
-          {/* NeedCard всегда в самом низу колоды */}
-          <NeedCard
-            key="executors-need-card"
-            icon="🎉"
-            title="Исполнители закончились"
-            text="Вы просмотрели всех доступных исполнителей. Загляните позже!"
-            isTop={isNeedCardTop}
+        {/* NeedCard всегда в самом низу колоды */}
+        <NeedCard
+          key="executors-need-card"
+          icon="🎉"
+          title="Исполнители закончились"
+          text="Вы просмотрели всех доступных исполнителей. Загляните позже!"
+          isTop={isNeedCardTop}
+        />
+        {nextExecutor && (
+          <ExecutorCard
+            key={nextExecutor.id}
+            executor={nextExecutor}
+            onSwipeComplete={() => {}}
+            isTop={false}
           />
-          {nextExecutor && (
-            <ExecutorCard
-              key={nextExecutor.id}
-              executor={nextExecutor}
-              onSwipe={() => {}}
-              isTop={false}
-            />
-          )}
-          {currentExecutor && (
-            <ExecutorCard
-              key={currentExecutor.id}
-              executor={currentExecutor}
-              onSwipe={(direction) => handleExecutorSwipe(currentExecutor, direction)}
-              isTop={isActive}
-              exitDirection={pendingSwipe?.type === 'executor' && pendingSwipe.id === currentExecutor.id ? exitDirection : null}
-              onAnimationComplete={handleAnimationComplete}
-            />
-          )}
-        </AnimatePresence>
+        )}
+        {currentExecutor && (
+          <ExecutorCard
+            key={currentExecutor.id}
+            executor={currentExecutor}
+            onSwipeComplete={(direction) => handleExecutorSwipeComplete(currentExecutor, direction)}
+            isTop={isActive}
+            exitDirection={executorExitDirection}
+          />
+        )}
       </div>
     );
   };

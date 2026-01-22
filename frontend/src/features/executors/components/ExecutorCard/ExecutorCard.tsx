@@ -1,4 +1,4 @@
-import { forwardRef, useState, useEffect } from 'react';
+import { forwardRef, useState, useEffect, useCallback } from 'react';
 import { motion, PanInfo, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Typography } from '@alfalab/core-components-typography';
 import { Tag } from '@alfalab/core-components-tag';
@@ -9,10 +9,9 @@ import styles from './ExecutorCard.module.css';
 
 interface ExecutorCardProps {
   executor: Executor;
-  onSwipe: (direction: 'left' | 'right') => void;
+  onSwipeComplete: (direction: 'left' | 'right') => void;
   isTop?: boolean;
   exitDirection?: 'left' | 'right' | null;
-  onAnimationComplete?: () => void;
 }
 
 // Swipe thresholds
@@ -20,7 +19,7 @@ const SWIPE_OFFSET_THRESHOLD = 80; // Minimum distance to trigger swipe
 const SWIPE_VELOCITY_THRESHOLD = 300; // Minimum velocity to trigger swipe regardless of distance
 
 export const ExecutorCard = forwardRef<HTMLDivElement, ExecutorCardProps>(function ExecutorCard(
-  { executor, onSwipe, isTop = false, exitDirection = null, onAnimationComplete },
+  { executor, onSwipeComplete, isTop = false, exitDirection = null },
   ref
 ) {
   // Track if card is being removed (finger swipe or button)
@@ -31,21 +30,34 @@ export const ExecutorCard = forwardRef<HTMLDivElement, ExecutorCardProps>(functi
   const rotate = useTransform(x, [-300, 0, 300], [-25, 0, 25]);
   const opacity = useTransform(x, [-300, -150, 0, 150, 300], [0.5, 0.8, 1, 0.8, 0.5]);
 
+  // Reset state when card becomes top (was previously next card in stack)
+  useEffect(() => {
+    if (isTop && !exitDirection) {
+      setIsExiting(false);
+      x.set(0);
+    }
+  }, [isTop, exitDirection, x]);
+
+  // Handle exit animation completion
+  const handleExitComplete = useCallback((direction: 'left' | 'right') => {
+    onSwipeComplete(direction);
+  }, [onSwipeComplete]);
+
   // Handle button press - animate exit via motion values
   useEffect(() => {
     if (exitDirection && !isExiting) {
       setIsExiting(true);
       const targetX = exitDirection === 'right' ? 500 : -500;
       animate(x, targetX, {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
+        type: 'tween',
+        duration: 0.3,
+        ease: [0.32, 0, 0.67, 0],
         onComplete: () => {
-          onAnimationComplete?.();
+          handleExitComplete(exitDirection);
         },
       });
     }
-  }, [exitDirection, isExiting, x, onAnimationComplete]);
+  }, [exitDirection, isExiting, x, handleExitComplete]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (isExiting) return;
@@ -59,23 +71,21 @@ export const ExecutorCard = forwardRef<HTMLDivElement, ExecutorCardProps>(functi
     if (swipedRight) {
       setIsExiting(true);
       animate(x, 500, {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        velocity: velocity.x,
+        type: 'tween',
+        duration: 0.3,
+        ease: [0.32, 0, 0.67, 0],
         onComplete: () => {
-          onSwipe('right');
+          handleExitComplete('right');
         },
       });
     } else if (swipedLeft) {
       setIsExiting(true);
       animate(x, -500, {
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        velocity: velocity.x,
+        type: 'tween',
+        duration: 0.3,
+        ease: [0.32, 0, 0.67, 0],
         onComplete: () => {
-          onSwipe('left');
+          handleExitComplete('left');
         },
       });
     } else {
@@ -109,11 +119,6 @@ export const ExecutorCard = forwardRef<HTMLDivElement, ExecutorCardProps>(functi
       animate={{
         scale: isTop ? 1 : 0.95,
         y: isTop ? 0 : 10,
-      }}
-      exit={{
-        x: x.get() > 0 ? 500 : -500,
-        opacity: 0,
-        transition: { duration: 0.15 },
       }}
       transition={{ type: 'spring', stiffness: 800, damping: 35 }}
     >

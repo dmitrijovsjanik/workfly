@@ -100,7 +100,7 @@ export function OrdersPage() {
               key={nextOrder.id}
               order={nextOrder}
               userSkills={userSkills}
-              onSwipe={() => {}}
+              onSwipeComplete={() => {}}
               isTop={false}
             />
           )}
@@ -111,7 +111,7 @@ export function OrdersPage() {
               key={currentOrder.id}
               order={currentOrder}
               userSkills={userSkills}
-              onSwipe={(direction) => handleSwipe(currentOrder, direction)}
+              onSwipeComplete={(direction: 'left' | 'right') => handleSwipe(currentOrder, direction)}
               isTop={true}
             />
           )}

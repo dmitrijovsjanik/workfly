@@ -66,7 +66,7 @@ export function ExecutorsPage() {
             <ExecutorCard
               key={nextExecutor.id}
               executor={nextExecutor}
-              onSwipe={() => {}}
+              onSwipeComplete={() => {}}
               isTop={false}
             />
           )}
@@ -75,7 +75,7 @@ export function ExecutorsPage() {
             <ExecutorCard
               key={currentExecutor.id}
               executor={currentExecutor}
-              onSwipe={(direction) => handleSwipe(currentExecutor, direction)}
+              onSwipeComplete={(direction: 'left' | 'right') => handleSwipe(currentExecutor, direction)}
               isTop={true}
             />
           )}
