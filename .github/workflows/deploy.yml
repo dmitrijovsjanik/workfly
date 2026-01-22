@@ -65,15 +65,28 @@ jobs:
             gunzip -c /tmp/backend.tar.gz | docker load
             rm /tmp/frontend.tar.gz /tmp/backend.tar.gz
 
-            # Restart containers with new images
-            docker compose down
+            # Stop old containers
+            docker compose down --remove-orphans
+
+            # Start new containers
             docker compose up -d
 
-            # Cleanup
+            # Cleanup old images
             docker system prune -f
 
-            # Health check
-            sleep 10
-            curl -f http://127.0.0.1:3002/api/health || exit 1
+            # Wait for services to be ready
+            echo "Waiting for services to start..."
+            for i in {1..30}; do
+              if curl -sf http://127.0.0.1:3002/api/health > /dev/null 2>&1; then
+                echo "Backend is healthy!"
+                break
+              fi
+              echo "Waiting for backend... ($i/30)"
+              sleep 2
+            done
+
+            # Final health checks
+            curl -f http://127.0.0.1:3002/api/health || { echo "Backend health check failed"; exit 1; }
+            curl -f http://127.0.0.1:3001/ || { echo "Frontend health check failed"; exit 1; }
             echo "Deploy successful!"
           EOF

@@ -34,12 +34,14 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:3000"
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-workfly}:${POSTGRES_PASSWORD:-workfly_password}@db:5432/${POSTGRES_DB:-workfly}
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
-      APP_URL: ${APP_URL:-http://localhost}
+      APP_URL: ${APP_URL:-https://workfly.online}
     depends_on:
       db:
         condition: service_healthy
@@ -48,16 +50,14 @@ services:
     volumes:
       - uploads:/app/uploads
 
-  # Frontend
+  # Frontend (nginx serving static files)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "80:80"
-    depends_on:
-      - backend
+      - "127.0.0.1:3001:80"
 
 volumes:
   postgres_data:
