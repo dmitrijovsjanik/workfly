@@ -1,0 +1,101 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.cardSkeleton {
+  width: calc(100vw - 32px);
+  max-width: 400px;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  flex-shrink: 0;
+}
+
+/* Card Stack - explicit height for 3:4 ratio (aspect-ratio doesn't work in flex context) */
+.cardStack {
+  position: relative;
+  width: calc(100vw - 32px);
+  max-width: 400px;
+  height: calc((100vw - 32px) * 4 / 3);
+  max-height: min(calc(400px * 4 / 3), 70vh);
+  flex-shrink: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  padding: 16px 0;
+  padding-bottom: calc(16px + 72px + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.actionBtn:active {
+  transform: scale(0.95);
+}
+
+.skipBtn {
+  background: #fff;
+  color: #c62828;
+  box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
+}
+
+.skipBtn:hover {
+  box-shadow: 0 6px 16px rgba(198, 40, 40, 0.3);
+}
+
+.likeBtn {
+  background: #1565c0;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+}
+
+.likeBtn:hover {
+  box-shadow: 0 6px 16px rgba(21, 101, 192, 0.4);
+}
+
+.counter {
+  font-size: 14px;
+  color: #999;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  padding: 24px;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.emptyText {
+  margin-bottom: 24px;
+  max-width: 280px;
+}

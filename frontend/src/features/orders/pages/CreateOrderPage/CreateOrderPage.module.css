@@ -1,0 +1,10 @@
+.container {
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+  background: #fff;
+  min-height: 100%;
+}
+
+.header {
+  margin-bottom: 24px;
+}
