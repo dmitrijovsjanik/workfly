@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Message01Icon } from '@hugeicons/core-free-icons';
@@ -15,10 +15,17 @@ import { ExecutorCard } from '@/features/executors/components/ExecutorCard';
 import type { Order, Executor } from '@/shared/types';
 import styles from './DashboardPage.module.css';
 
-type SwipeMode = 'orders' | 'executors';
+type SwipeMode = 'projects' | 'executors';
+
+function getInitialMode(searchParams: URLSearchParams): SwipeMode {
+  const tab = searchParams.get('tab');
+  if (tab === 'executors') return 'executors';
+  return 'projects';
+}
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { setSubheader, setFooter } = useLayout();
   const { data: user, isLoading: profileLoading } = useProfile();
   const { data: ordersCount, isLoading: ordersCountLoading } = useOrdersCount();
@@ -29,7 +36,12 @@ export function DashboardPage() {
   const hasOrders = (ordersCount?.count ?? 0) > 0;
   const userSkills = user?.executorProfile?.skills || [];
 
-  const [mode, setMode] = useState<SwipeMode>(hasExecutorProfile ? 'orders' : 'executors');
+  const [mode, setModeState] = useState<SwipeMode>(() => getInitialMode(searchParams));
+
+  const setMode = useCallback((newMode: SwipeMode) => {
+    setModeState(newMode);
+    setSearchParams({ tab: newMode }, { replace: true });
+  }, [setSearchParams]);
   const [swipedOrders, setSwipedOrders] = useState<Set<string>>(new Set());
   const [swipedExecutors, setSwipedExecutors] = useState<Set<string>>(new Set());
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
@@ -37,7 +49,7 @@ export function DashboardPage() {
 
   const isLoading = profileLoading || ordersCountLoading;
 
-  const canSwipeOrders = hasExecutorProfile;
+  const canSwipeProjects = hasExecutorProfile;
   const canSwipeExecutors = hasOrders;
 
   const availableOrders = useMemo(
@@ -75,7 +87,7 @@ export function DashboardPage() {
   const handleButtonSwipe = useCallback((direction: 'left' | 'right') => {
     if (pendingSwipe) return; // Already animating
 
-    if (mode === 'orders' && currentOrder) {
+    if (mode === 'projects' && currentOrder) {
       setPendingSwipe({ type: 'order', id: currentOrder.id, direction });
       setExitDirection(direction);
     } else if (mode === 'executors' && currentExecutor) {
@@ -105,8 +117,8 @@ export function DashboardPage() {
   }, [pendingSwipe]);
 
   // Check if we have cards to show actions for the current mode
-  const hasCards = mode === 'orders'
-    ? canSwipeOrders && availableOrders.length > 0
+  const hasCards = mode === 'projects'
+    ? canSwipeProjects && availableOrders.length > 0
     : canSwipeExecutors && availableExecutors.length > 0;
 
   // Set subheader (tabs)
@@ -122,12 +134,12 @@ export function DashboardPage() {
       setSubheader(
         <div className={styles.tabs}>
           <button
-            className={`${styles.tab} ${mode === 'orders' ? styles.activeTab : ''}`}
-            onClick={() => setMode('orders')}
+            className={`${styles.tab} ${mode === 'projects' ? styles.activeTab : ''}`}
+            onClick={() => setMode('projects')}
             type="button"
           >
-            Заказы
-            {!canSwipeOrders && <span className={styles.locked}>🔒</span>}
+            Проекты
+            {!canSwipeProjects && <span className={styles.locked}>🔒</span>}
           </button>
           <button
             className={`${styles.tab} ${mode === 'executors' ? styles.activeTab : ''}`}
@@ -142,7 +154,7 @@ export function DashboardPage() {
     }
 
     return () => setSubheader(null);
-  }, [isLoading, mode, canSwipeOrders, canSwipeExecutors, setSubheader]);
+  }, [isLoading, mode, canSwipeProjects, canSwipeExecutors, setSubheader, setMode]);
 
   // Set footer (action buttons) - always show to prevent layout jump
   useEffect(() => {
@@ -178,8 +190,8 @@ export function DashboardPage() {
     return () => setFooter(null);
   }, [hasCards, handleButtonSwipe, navigate, setFooter]);
 
-  // Render orders stack content
-  const renderOrdersStack = () => {
+  // Render projects stack content
+  const renderProjectsStack = () => {
     if (ordersLoading) {
       return (
         <div className={styles.cardStack}>
@@ -187,16 +199,16 @@ export function DashboardPage() {
         </div>
       );
     }
-    const isActive = mode === 'orders';
+    const isActive = mode === 'projects';
 
     // Если нет профиля исполнителя - показываем только NeedCard
-    if (!canSwipeOrders) {
+    if (!canSwipeProjects) {
       return (
         <div className={styles.cardStack}>
           <NeedCard
             icon="🎯"
             title="Создайте профиль исполнителя"
-            text="Чтобы искать заказы, вам нужно создать карточку исполнителя с вашими навыками и ставкой."
+            text="Чтобы искать проекты, вам нужно создать карточку исполнителя с вашими навыками и ставкой."
             buttonText="Создать профиль"
             onButtonClick={() => navigate('/create-profile')}
             isTop={isActive}
@@ -214,10 +226,10 @@ export function DashboardPage() {
         <AnimatePresence mode="popLayout" onExitComplete={() => setExitDirection(null)}>
           {/* NeedCard всегда в самом низу колоды */}
           <NeedCard
-            key="orders-need-card"
+            key="projects-need-card"
             icon="🎉"
-            title="Заказы закончились"
-            text="Вы просмотрели все доступные заказы. Загляните позже!"
+            title="Проекты закончились"
+            text="Вы просмотрели все доступные проекты. Загляните позже!"
             isTop={isNeedCardTop}
           />
           {nextOrder && (
@@ -322,11 +334,12 @@ export function DashboardPage() {
     <div className={styles.body}>
       <motion.div
         className={styles.stacksContainer}
-        animate={{ x: mode === 'orders' ? '0%' : '-50%' }}
+        initial={false}
+        animate={{ x: mode === 'projects' ? '0%' : '-50%' }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
         <div className={styles.stackWrapper}>
-          {renderOrdersStack()}
+          {renderProjectsStack()}
         </div>
         <div className={styles.stackWrapper}>
           {renderExecutorsStack()}
