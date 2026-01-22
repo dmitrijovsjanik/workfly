@@ -1,0 +1,58 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  text-align: center;
+}
+
+.error {
+  padding: 12px;
+  background: #fff5f5;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.skillsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selectedSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.suggestedSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rateRow {
+  display: flex;
+  gap: 12px;
+}
+
+.rateRow > * {
+  flex: 1;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.actions > *:last-child {
+  flex: 1;
+}

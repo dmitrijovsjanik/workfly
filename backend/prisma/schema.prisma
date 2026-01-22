@@ -39,8 +39,7 @@ model ExecutorProfile {
   userId          String   @unique
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   bio             String?
-  hourlyRateMin   Int?
-  hourlyRateMax   Int?
+  hourlyRate      Int?
   skills          String[]
   portfolioUrl    String?
   experienceYears Int?
@@ -70,8 +69,7 @@ model Order {
   customer       User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
   title          String
   description    String
-  budgetMin      Int?
-  budgetMax      Int?
+  budget         Int?
   deadline       DateTime?
   skillsRequired String[]
   category       Category

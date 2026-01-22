@@ -1,0 +1,152 @@
+.container {
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+}
+
+/* Skeletons */
+.headerSkeleton {
+  height: 150px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.sectionSkeleton {
+  height: 200px;
+  border-radius: 12px;
+}
+
+/* Profile Header */
+.profileHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 16px;
+  margin-bottom: 16px;
+}
+
+.userName {
+  margin-bottom: 4px;
+}
+
+.editBtn {
+  margin-top: 12px;
+}
+
+/* Edit Mode */
+.editHeader {
+  margin-bottom: 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.skillsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selectedSkills,
+.suggestedSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Section */
+.section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Executor Info */
+.executorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bio {
+  color: #666;
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.executorStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.stat {
+  text-align: center;
+  padding: 12px 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.statValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+
+/* Become Executor */
+.becomeExecutor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  gap: 12px;
+}
+
+/* Logout */
+.logoutSection {
+  margin-top: 24px;
+}
+
+/* Avatar text semibold + proportional size */
+.avatar :global([class*="text"]) {
+  font-weight: 600;
+  font-size: 24px;
+}

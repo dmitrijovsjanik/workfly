@@ -1,0 +1,41 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.error {
+  padding: 12px;
+  background: #fff5f5;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.input {
+  margin-bottom: 4px;
+}
+
+.button {
+  margin-top: 8px;
+}
+
+.link {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.link a {
+  color: #333;
+  text-decoration: none;
+}
+
+.link a:hover {
+  text-decoration: underline;
+}

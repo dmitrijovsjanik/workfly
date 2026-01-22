@@ -44,27 +44,27 @@
 
 ### Backend
 
-- [ ] Настроить Fastify + TypeScript
-- [ ] Подключить Prisma + PostgreSQL
-- [ ] Создать модели User, ExecutorProfile, CustomerProfile
-- [ ] Реализовать регистрацию email/пароль
-- [ ] Реализовать авторизацию через Telegram
-- [ ] JWT токены (access + refresh)
-- [ ] Middleware авторизации
-- [ ] API профиля пользователя
+- [x] Настроить Fastify + TypeScript
+- [x] Подключить Prisma + PostgreSQL
+- [x] Создать модели User, ExecutorProfile, CustomerProfile
+- [x] Реализовать регистрацию email/пароль
+- [ ] Реализовать авторизацию через Telegram (отложено)
+- [x] JWT токены (access + refresh)
+- [x] Middleware авторизации
+- [x] API профиля пользователя
 
 ### Frontend
 
-- [ ] Настроить Vite + React + TypeScript
-- [ ] Подключить @alfalab/core-components
-- [ ] Подключить @hugeicons/react
-- [ ] Настроить роутинг (React Router)
-- [ ] Страница регистрации
-- [ ] Страница входа
-- [ ] Telegram Login Widget
-- [ ] Страница профиля
-- [ ] Форма редактирования профиля исполнителя
-- [ ] Защищённые роуты
+- [x] Настроить Vite + React + TypeScript
+- [x] Подключить @alfalab/core-components
+- [x] Подключить @hugeicons/react
+- [x] Настроить роутинг (React Router)
+- [x] Страница регистрации
+- [x] Страница входа
+- [ ] Telegram Login Widget (отложено)
+- [x] Страница профиля
+- [x] Форма редактирования профиля исполнителя
+- [x] Защищённые роуты
 
 ### Результат
 
