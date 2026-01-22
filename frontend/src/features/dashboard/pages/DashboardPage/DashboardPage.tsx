@@ -2,8 +2,9 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Message01Icon } from '@hugeicons/core-free-icons';
+import { Message01Icon, Cancel01Icon, FavouriteIcon } from '@hugeicons/core-free-icons';
 import { Skeleton } from '@alfalab/core-components-skeleton';
+import { Button } from '@alfalab/core-components-button';
 import { useLayout } from '@/components/Layout';
 import { NeedCard } from '@/components';
 import { useProfile } from '@/features/profile/hooks/useProfile';
@@ -160,30 +161,32 @@ export function DashboardPage() {
   useEffect(() => {
     setFooter(
       <>
-        <button
-          className={`${styles.actionBtn} ${styles.skipBtn} ${!hasCards ? styles.disabledBtn : ''}`}
+        <Button
+          view="secondary"
+          size={56}
+          shape="rounded"
+          leftAddons={<HugeiconsIcon icon={Cancel01Icon} size={24} />}
           onClick={() => handleButtonSwipe('left')}
-          type="button"
           disabled={!hasCards}
-        >
-          ✕
-        </button>
-        <button
-          className={styles.chatBtn}
+          className={styles.skipBtn}
+        />
+        <Button
+          view="secondary"
+          size={56}
+          shape="rounded"
+          leftAddons={<HugeiconsIcon icon={Message01Icon} size={24} />}
           onClick={() => navigate('/messages')}
-          type="button"
           aria-label="Чаты"
-        >
-          <HugeiconsIcon icon={Message01Icon} size={24} />
-        </button>
-        <button
-          className={`${styles.actionBtn} ${styles.likeBtn} ${!hasCards ? styles.disabledBtn : ''}`}
+        />
+        <Button
+          view="primary"
+          size={56}
+          shape="rounded"
+          leftAddons={<HugeiconsIcon icon={FavouriteIcon} size={24} />}
           onClick={() => handleButtonSwipe('right')}
-          type="button"
           disabled={!hasCards}
-        >
-          ♥
-        </button>
+          className={styles.likeBtn}
+        />
       </>
     );
 

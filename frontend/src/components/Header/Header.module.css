@@ -21,27 +21,6 @@
   transform: scale(0.95);
 }
 
-/* Icon button (notifications) */
-.iconButton {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  background: #fff;
-  color: #333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.iconButton:active {
-  transform: scale(0.95);
-}
-
 /* Logo */
 .logo {
   flex: 1;

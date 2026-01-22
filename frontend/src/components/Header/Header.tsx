@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Notification02Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { Circle } from '@alfalab/core-components-icon-view/circle';
+import { Button } from '@alfalab/core-components-button';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import styles from './Header.module.css';
 
@@ -46,14 +47,14 @@ export function Header() {
       </button>
 
       {/* Notifications */}
-      <button
-        type="button"
-        className={styles.iconButton}
+      <Button
+        view="secondary"
+        size={56}
+        shape="rounded"
+        leftAddons={<HugeiconsIcon icon={Notification02Icon} size={24} />}
         onClick={() => navigate('/messages')}
         aria-label="Уведомления"
-      >
-        <HugeiconsIcon icon={Notification02Icon} size={24} />
-      </button>
+      />
     </header>
   );
 }

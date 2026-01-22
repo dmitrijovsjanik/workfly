@@ -90,60 +90,13 @@
 }
 
 
-.actionBtn {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: none;
-  font-size: 28px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.actionBtn:active {
-  transform: scale(0.95);
-}
-
+/* Footer action buttons */
 .skipBtn {
-  background: #fff;
+  --icon-button-primary-base-bg-color: #c62828;
   color: #c62828;
-  box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
 }
 
 .likeBtn {
-  background: #2e7d32;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-}
-
-.disabledBtn {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Chat Button */
-.chatBtn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  background: #fff;
-  color: #333;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.chatBtn:active {
-  transform: scale(0.95);
+  --icon-button-primary-base-bg-color: #2e7d32;
 }
 
